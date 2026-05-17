@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="{{ language|default('id') }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ (language=='en' and 'Order History' or 'Riwayat Pesanan') }} - {{ ('Table' if language=='en' else 'Meja') }} {{ table }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/order.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
+  <style>
+    .history-wrap{max-width:960px;margin:0 auto;padding:14px 14px 30px;}
+    .history-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+    .history-head h2{margin:6px 0;}
+    .history-head .meta{color:#64748b;font-size:14px;margin:4px 0 0;}
+    .history-card{border:1px solid #e5e7eb;border-radius:14px;background:#fff;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.05);}
+    .history-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+    .history-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed #e5e7eb;}
+    .history-row:last-child{border-bottom:none;}
+    .history-name{font-weight:700;}
+    .history-meta{color:#667085;font-size:13px;}
+    .history-price{font-weight:800;font-variant-numeric:tabular-nums;}
+    .empty{padding:18px 12px;text-align:center;color:#667085;border:1px dashed #e5e7eb;border-radius:12px;background:#f8fafc;}
+    .total-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px dashed #e5e7eb;font-weight:800;}
+    .btn-row{display:grid;gap:10px;margin-top:14px;}
+    .err{color:#b91c1c;font-weight:700;margin-top:10px;}
+  </style>
+</head>
+
+<body>
+  <header class="hdr">
+    <div class="hdr-inner">
+      <div class="brand">{{ brand_name }}</div>
+      <div class="table-tag">{{ (language=='en' and 'Table' or 'Meja') }} {{ table }}</div>
+      <div class="lang">
+        <a href="?table={{table}}&session={{session}}&lang=id">🇮🇩 Bahasa</a> | <a href="?table={{table}}&session={{session}}&lang=en">🇬🇧 English</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="history-wrap">
+    <div class="history-head">
+      <div>
+        <p class="history-meta">{{ language=='en'
+          and 'Showing all items recorded for this session'
+          or 'Menampilkan semua item untuk sesi ini' }}</p>
+        <h2>{{ language=='en' and 'Order History' or 'Riwayat Pesanan' }}</h2>
+        <p class="history-meta">{{ (language=='en' and 'Session' or 'Sesi') }} {{ session }}</p>
+      </div>
+    </div>
+
+    <div class="history-card">
+      {% if error %}
+        <div class="err">{{ error }}</div>
+      {% elif not items %}
+        <div class="empty">{{ language=='en' and 'No orders found for this session yet.' or 'Belum ada pesanan untuk sesi ini.' }}</div>
+      {% else %}
+        <div class="history-list">
+          {% for it in items %}
+            <div class="history-row">
+              <div>
+                <div class="history-name">{{ it.item_name }}</div>
+                <div class="history-meta">{{ (language=='en' and 'Qty' or 'Jumlah') }} {{ it.qty }} × {{ it.price_label }}</div>
+              </div>
+              <div class="history-price">{{ it.line_label }}</div>
+            </div>
+          {% endfor %}
+        </div>
+        <p class="history-meta" style="margin:10px 0 0;">
+          {{ language=='en'
+            and 'Prices exclude 15% tax and service.'
+            or 'Harga belum termasuk pajak dan service 15%.' }}
+        </p>
+        <div class="total-row">
+          <span>{{ language=='en' and 'Total for session' or 'Total untuk sesi' }}</span>
+          <span>{{ total_label }}</span>
+        </div>
+      {% endif %}
+
+      <div class="btn-row">
+        <a class="btn btn-ghost-green" href="/cart?table={{ table }}&session={{ session }}&lang={{ language }}">
+          {{ language=='en' and 'Back to Cart' or 'Kembali ke Keranjang' }}
+        </a>
+        <a class="btn btn-solid-green" href="/order/{{ table }}/{{ session }}?lang={{ language }}">
+          {{ language=='en' and 'Continue Ordering' or 'Lanjutkan Memesan' }}
+        </a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

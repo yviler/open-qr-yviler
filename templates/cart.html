@@ -16,12 +16,13 @@
     </div>
   </header>
 
-  <div class="wrap">
+  <div class="wrap">   <!-- gives nice max-width like order page -->
     <form id="cartForm" method="POST" action="/submit" onsubmit="return validateBeforeSubmit()">
       <h3 style="margin-top:12px">{{ language == 'en' and 'Orders' or 'Pesanan' }}</h3>
 
       <div id="cart" class="cart-list"></div>
 
+      <!-- hidden payload -->
       <input type="hidden" name="table" value="{{ table }}">
       <input type="hidden" name="session" value="{{ session }}">
       <input type="hidden" id="cart_data" name="cart_data">
@@ -34,8 +35,8 @@
           <div class="trow"><span>{{ language=='en' and 'Service (5%)' or 'Service (5%)' }}</span><span id="serviceval">Rp0</span></div>
           <div class="trow grand"><span>{{ language=='en' and 'Estimated Total' or 'Total Perkiraan' }}</span><span id="totalval">Rp0</span></div>
           <small class="est-note">{{ language=='en'
-            and 'Items priced by weight use an estimated portion for calculation.'
-            or 'Item per berat menggunakan porsi rata-rata untuk perhitungan.' }}</small>
+            and 'Seafood by weight uses average portion for an estimate.'
+            or 'Ikan timbang pakai porsi rata-rata untuk perkiraan.' }}</small>
         </div>
 
         <button id="submit-btn" class="btn btn-solid-green" type="submit">
@@ -55,7 +56,7 @@
     </form>
   </div>
   <script>
-    const lang = "{{ language|default('en') }}";
+    const lang = "{{ language|default('id') }}";
     sessionStorage.setItem("session_id", "{{ session }}");
     sessionStorage.setItem("table", "{{ table }}");
   </script>

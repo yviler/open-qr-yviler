@@ -1,0 +1,77 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <h2>Dishes for {{ item.name }}</h2>
+    {% if not dishes %}
+      <p class="notice">No dish variants yet.</p>
+    {% else %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Available</th>
+            <th>Price Override</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in dishes %}
+          <tr>
+            <td>{{ d.name }}</td>
+            <td>{{ 'Yes' if d.available else 'No' }}</td>
+            <td>{{ d.price_override if d.price_override else '-' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_dishes_delete', dish_id=d.id) }}" style="display:inline;">
+                <button class="btn btn-danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Add Dish</h2>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_dishes_add', item_id=item.id) }}" class="grid">
+      <div class="form-row">
+        <div>
+          <label>Name</label>
+          <input name="name" />
+        </div>
+        <div>
+          <label>Price Override</label>
+          <input name="price_override" type="number" />
+        </div>
+        <div>
+          <label>Sort Order</label>
+          <input name="sort_order" type="number" value="0" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Image</label>
+          <select name="image_path">
+            <option value="">-- none --</option>
+            {% for img in images %}
+            <option value="{{ img.filename }}">{{ img.original_name or img.filename }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Upload New Image</label>
+          <input type="file" name="image_upload" accept="image/*" />
+        </div>
+      </div>
+
+      <label><input type="checkbox" name="available" checked /> Available</label>
+      <button class="btn" type="submit">Add Dish</button>
+      <a class="btn btn-secondary" href="{{ url_for('admin_menu') }}">Back to Menu</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

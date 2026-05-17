@@ -1,0 +1,31 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <h2>Generate QR</h2>
+    <form method="POST" action="{{ url_for('admin_qr_generate') }}" class="grid">
+      <div>
+        <label>Table Number</label>
+        <input name="table_number" placeholder="12" />
+      </div>
+      <button class="btn" type="submit">Generate</button>
+      <p class="notice">Table mode generates a stable QR that opens the table for 5 hours after each scan.</p>
+    </form>
+  </div>
+
+  {% if qr_data %}
+  <div class="card">
+    <h2>QR for Table {{ qr_data.table_number }}</h2>
+    <div class="qr-block">
+      <img class="thumb" style="width:240px;height:240px;" src="data:image/png;base64,{{ qr_data.img_b64 }}" alt="QR" />
+      <div>
+        <div class="notice">Mode: {{ qr_data.mode }}</div>
+        <div><strong>URL</strong>: {{ qr_data.url }}</div>
+      </div>
+      <button class="btn" onclick="window.print()">Print</button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

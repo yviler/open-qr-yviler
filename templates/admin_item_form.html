@@ -1,0 +1,95 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>{{ 'Edit Item' if item else 'New Item' }}</h2>
+  <form method="POST" enctype="multipart/form-data"
+        action="{{ url_for('admin_item_update', item_id=item.id) if item else url_for('admin_item_create') }}"
+        class="grid">
+    <div class="form-row">
+      <div>
+        <label>Name</label>
+        <input name="name" value="{{ item.name if item else '' }}" />
+      </div>
+      <div>
+        <label>Category</label>
+        <select name="category_id">
+          {% for c in categories %}
+          <option value="{{ c.id }}" {% if item and item.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label>Description</label>
+      <textarea name="description">{{ item.description if item else '' }}</textarea>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label>Unit (use "ons" for weight)</label>
+        <input name="unit" value="{{ item.unit if item else '' }}" />
+      </div>
+      <div>
+        <label>Price (per item/portion)</label>
+        <input name="price" type="number" value="{{ item.price if item else '' }}" />
+      </div>
+      <div>
+        <label>Price Per Kg (for ons)</label>
+        <input name="price_per_kg" type="number" value="{{ item.price_per_kg if item else '' }}" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label>Portion Info</label>
+        <input name="portion_info" value="{{ item.portion_info if item else '' }}" />
+      </div>
+      <div>
+        <label>Portion Choices (comma-separated)</label>
+        <input name="portion_choices" value="{{ item.portion_choices if item else '' }}" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label>Portion Min (ons)</label>
+        <input name="portion_ons_min" type="number" value="{{ item.portion_ons_min if item else '' }}" />
+      </div>
+      <div>
+        <label>Portion Max (ons)</label>
+        <input name="portion_ons_max" type="number" value="{{ item.portion_ons_max if item else '' }}" />
+      </div>
+      <div>
+        <label>Sort Order</label>
+        <input name="sort_order" type="number" value="{{ item.sort_order if item else 0 }}" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label>Image</label>
+        <select name="image_path">
+          <option value="">-- none --</option>
+          {% for img in images %}
+          <option value="{{ img.filename }}" {% if item and item.image_path == img.filename %}selected{% endif %}>{{ img.original_name or img.filename }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Upload New Image</label>
+        <input type="file" name="image_upload" accept="image/*" />
+      </div>
+    </div>
+
+    <label><input type="checkbox" name="available" {% if not item or item.available %}checked{% endif %} /> Available</label>
+    <label><input type="checkbox" name="qr_render" {% if not item or item.qr_render %}checked{% endif %} /> Show on QR menu</label>
+
+    <div class="form-row">
+      <button class="btn" type="submit">Save</button>
+      <a class="btn btn-secondary" href="{{ url_for('admin_menu') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

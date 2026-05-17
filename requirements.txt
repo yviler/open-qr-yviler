@@ -1,5 +1,7 @@
 flask
-qrcode[pil]
+qrcode
 pillow
 python-dotenv
-requests
+psycopg[binary]
+itsdangerous
+werkzeug

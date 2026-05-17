@@ -1,0 +1,21 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Quick Actions</h2>
+    <p class="notice">Manage menu, tables, and generate QR codes.</p>
+    <div class="grid">
+      <a class="btn" href="{{ url_for('admin_menu') }}">Manage Menu</a>
+      <a class="btn btn-secondary" href="{{ url_for('admin_qr') }}">Generate QR</a>
+      <a class="btn btn-secondary" href="{{ url_for('admin_tables') }}">Manage Tables</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Settings</h2>
+    <p class="notice">Control QR mode and branding.</p>
+    <a class="btn" href="{{ url_for('admin_settings') }}">Open Settings</a>
+  </div>
+</div>
+{% endblock %}

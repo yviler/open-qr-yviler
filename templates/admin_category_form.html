@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>{{ 'Edit Category' if category else 'New Category' }}</h2>
+  <form method="POST" action="{{ url_for('admin_category_update', cat_id=category.id) if category else url_for('admin_category_create') }}" class="grid">
+    <div class="form-row">
+      <div>
+        <label>Name</label>
+        <input name="name" value="{{ category.name if category else '' }}" />
+      </div>
+      <div>
+        <label>Sort Order</label>
+        <input name="sort_order" type="number" value="{{ category.sort_order if category else 0 }}" />
+      </div>
+    </div>
+    <div class="form-row">
+      <button class="btn" type="submit">Save</button>
+      <a class="btn btn-secondary" href="{{ url_for('admin_menu') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

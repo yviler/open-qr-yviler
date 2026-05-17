@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ brand_name }} Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+</head>
+<body>
+  <header class="admin-header">
+    <div class="inner">
+      <div class="admin-brand">{{ brand_name }} Admin</div>
+      <nav class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('admin_menu') }}">Menu</a>
+        <a href="{{ url_for('admin_tables') }}">Tables</a>
+        <a href="{{ url_for('admin_qr') }}">QR</a>
+        <a href="{{ url_for('admin_images') }}">Images</a>
+        <a href="{{ url_for('admin_settings') }}">Settings</a>
+        <a href="{{ url_for('order_for_table', table='1') }}">Preview</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

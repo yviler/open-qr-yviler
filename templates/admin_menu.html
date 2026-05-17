@@ -1,0 +1,65 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <div class="form-row" style="align-items:center;">
+      <h2 style="margin:0;">Menu</h2>
+      <div>
+        <a class="btn" href="{{ url_for('admin_category_new') }}">Add Category</a>
+        <a class="btn btn-secondary" href="{{ url_for('admin_item_new') }}">Add Item</a>
+      </div>
+    </div>
+
+    {% if not categories %}
+      <p class="notice">No categories yet. Add a category to get started.</p>
+    {% endif %}
+
+    {% for cat in categories %}
+      <div class="card" style="margin-top:12px;">
+        <div class="form-row" style="align-items:center;">
+          <div>
+            <strong>{{ cat.name }}</strong>
+            <span class="pill">Sort {{ cat.sort_order }}</span>
+          </div>
+          <div>
+            <a href="{{ url_for('admin_category_edit', cat_id=cat.id) }}">Edit</a>
+            <form method="POST" action="{{ url_for('admin_category_delete', cat_id=cat.id) }}" style="display:inline;">
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+
+        {% if not cat.items_list %}
+          <p class="notice">No items in this category.</p>
+        {% else %}
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Available</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in cat.items_list %}
+              <tr>
+                <td>{{ it.name }}</td>
+                <td>{{ 'Yes' if it.available else 'No' }}</td>
+                <td>
+                  <a href="{{ url_for('admin_item_edit', item_id=it.id) }}">Edit</a>
+                  <a href="{{ url_for('admin_dishes', item_id=it.id) }}">Dishes</a>
+                  <form method="POST" action="{{ url_for('admin_item_delete', item_id=it.id) }}" style="display:inline;">
+                    <button class="btn btn-danger" type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

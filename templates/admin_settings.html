@@ -1,0 +1,60 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>Settings</h2>
+  <form method="POST" action="{{ url_for('admin_settings_save') }}" class="grid">
+    <div>
+      <label>Brand Name</label>
+      <input name="brand_name" value="{{ brand_name }}" />
+    </div>
+
+    <div>
+      <label>QR Mode</label>
+      <select name="qr_mode">
+        <option value="table" {% if qr_mode == 'table' %}selected{% endif %}>Table View</option>
+        <option value="session" {% if qr_mode == 'session' %}selected{% endif %}>Session Persists</option>
+      </select>
+      <p class="notice">Table mode keeps a stable table QR, but access only stays open for 5 hours after a scan. Session mode keeps the old per-session flow.</p>
+    </div>
+
+    <div class="card">
+      <h3>Opening Hours Text</h3>
+      <label><input type="checkbox" name="hours_enabled" {% if hours_enabled %}checked{% endif %} /> Show opening hours</label>
+      <div class="form-row" style="margin-top:10px;">
+        <div>
+          <label>Label (ID)</label>
+          <input name="hours_label_id" value="{{ hours_label_id }}" placeholder="Hari kerja / Akhir pekan" />
+        </div>
+        <div>
+          <label>Label (EN)</label>
+          <input name="hours_label_en" value="{{ hours_label_en }}" placeholder="Weekday / Weekend" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Open</label>
+          <input name="hours_open" value="{{ hours_open }}" placeholder="10:00" />
+        </div>
+        <div>
+          <label>Close</label>
+          <input name="hours_close" value="{{ hours_close }}" placeholder="22:00" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Note (ID)</label>
+          <input name="hours_note_id" value="{{ hours_note_id }}" placeholder="Jam buka hari ini" />
+        </div>
+        <div>
+          <label>Note (EN)</label>
+          <input name="hours_note_en" value="{{ hours_note_en }}" placeholder="Opening times today" />
+        </div>
+      </div>
+      <p class="notice">Leave fields empty to fall back to the default weekday/weekend values.</p>
+    </div>
+
+    <button class="btn" type="submit">Save Settings</button>
+  </form>
+</div>
+{% endblock %}

@@ -10,13 +10,13 @@
   </style>
 </head>
 <body>
-  <p>Order submitted. Redirecting…</p>
+  <p>Pesanan terkirim. Mengalihkan kembali…</p>
   <script>
     try { sessionStorage.removeItem("cart"); } catch (e) {}
     location.replace("{{ redirect_url }}");
   </script>
   <noscript>
-    <p>JavaScript is disabled. Click <a href="{{ redirect_url }}">here</a> to go back.</p>
+    <p>JavaScript mati. Klik <a href="{{ redirect_url }}">di sini</a> untuk kembali.</p>
   </noscript>
 </body>
 </html>

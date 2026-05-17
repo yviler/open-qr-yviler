@@ -1,0 +1,52 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <h2>Tables</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Table Number</th>
+          <th>Label</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tables %}
+        <tr>
+          <td>{{ t.table_number }}</td>
+          <td>{{ t.label or '-' }}</td>
+          <td>{{ 'Active' if t.active else 'Inactive' }}</td>
+          <td>
+            <a href="{{ url_for('admin_tables_edit', table_id=t.id) }}">Edit</a>
+            <form method="POST" action="{{ url_for('admin_tables_delete', table_id=t.id) }}" style="display:inline;">
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Add Table</h2>
+    <form method="POST" action="{{ url_for('admin_tables_add') }}" class="grid">
+      <div class="form-row">
+        <div>
+          <label>Table Number</label>
+          <input name="table_number" placeholder="12" />
+        </div>
+        <div>
+          <label>Label</label>
+          <input name="label" placeholder="VIP / Patio" />
+        </div>
+      </div>
+      <label><input type="checkbox" name="active" checked /> Active</label>
+      <button class="btn" type="submit">Add Table</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
