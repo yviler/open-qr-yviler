@@ -1,0 +1,63 @@
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/order.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
+</head>
+
+<body>
+  <header class="hdr">
+    <div class="hdr-inner">
+      <div class="brand">{{ brand_name }}</div>
+      <div class="table-tag">{{ (language=='en' and 'Table' or 'Meja') }} {{ table }}</div>
+      <div class="lang">
+        <a href="?table={{table}}&session={{session}}&lang=id">🇮🇩 Indonesia</a> |
+        <a href="?table={{table}}&session={{session}}&lang=en">🇬🇧 English</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <form id="cartForm" method="POST" action="/submit" onsubmit="return validateBeforeSubmit()">
+      <h3 style="margin-top:12px">{{ language == 'en' and 'Orders' or 'Pesanan' }}</h3>
+
+      <div id="cart" class="cart-list"></div>
+
+      <input type="hidden" name="table" value="{{ table }}">
+      <input type="hidden" name="session" value="{{ session }}">
+      <input type="hidden" id="cart_data" name="cart_data">
+      <input type="hidden" name="lang" value="{{ language }}">
+
+      <div class="sticky-actions">
+        <div class="totals">
+          <div class="trow"><span>{{ language=='en' and 'Subtotal' or 'Subtotal' }}</span><span id="subtot">Rp0</span></div>
+          <div class="trow"><span>{{ language=='en' and 'Tax (10%)' or 'Pajak (10%)' }}</span><span id="taxval">Rp0</span></div>
+          <div class="trow"><span>{{ language=='en' and 'Service (5%)' or 'Service (5%)' }}</span><span id="serviceval">Rp0</span></div>
+          <div class="trow grand"><span>{{ language=='en' and 'Estimated Total' or 'Total Perkiraan' }}</span><span id="totalval">Rp0</span></div>
+          <small class="est-note">{{ language=='en'
+            and 'Items priced by weight use an estimated portion for calculation.'
+            or 'Item per berat menggunakan porsi rata-rata untuk perhitungan.' }}</small>
+        </div>
+
+        <button id="submit-btn" class="btn btn-solid-green" type="submit">
+          {{ language == 'en' and 'Submit Order' or 'Kirim Pesanan' }}
+        </button>
+
+        <a id="continue-btn" class="btn btn-solid-green"
+          href="/order/{{ table }}/{{ session }}?lang={{ language }}">
+          {{ language == 'en' and 'Continue Ordering' or 'Lanjutkan Memesan' }}
+        </a>
+
+        <a id="orders-page-btn" class="btn btn-solid-green"
+          href="/order-list?table={{ table }}&session={{ session }}&lang={{ language }}">
+          {{ language == 'en' and 'Order History' or 'Riwayat Pesanan' }}
+        </a>
+      </div>
+    </form>
+  </div>
+  <script>
+    const lang = "{{ language|default('en') }}";
+    sessionStorage.setItem("session_id", "{{ session }}");
+    sessionStorage.setItem("table", "{{ table }}");
+  </script>
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+</body>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="{{ language|default('id') }}">
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      {{ ('Order - Table' if language=='en' else 'Pesanan - Meja') }} {{ table
+      }}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/order.css')}}"
+    />
+  </head>
+
+  <body>
+    <!-- Sticky header -->
+    <header class="hdr" id="hdr">
+      <div class="hdr-inner">
+        <div class="brand">{{ brand_name }}</div>
+        <div class="table-tag">
+          {{ ('Table' if language=='en' else 'Meja') }} {{ table }}
+        </div>
+        <div class="lang">
+          <a href="?lang=id">🇮🇩 Indonesia</a> |
+          <a href="?lang=en">🇬🇧 English</a>
+        </div>
+      </div>
+      {% if hours %}
+      <div class="openrow">
+        <div>
+          <strong>{{ hours.label_en if language=='en' else hours.label_id }}</strong>
+          — {{ hours.open }}–{{ hours.close }}
+        </div>
+        <div class="clock">
+          {{ hours.note_en if language=='en' else hours.note_id }}
+        </div>
+      </div>
+      {% endif %}
+    </header>
+
+    <div class="wrap">
+      <!-- Filters -->
+      <div class="chips" id="catChips">
+        <button
+          id="btn-cats"
+          type="button"
+          class="chip"
+          aria-label="{{ 'Categories' if language=='en' else 'Kategori' }}"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M3 6h18M3 12h18M3 18h18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        {% for category, _items in menu.items() %} {% set cat_label =
+        (category_translations_rev.get(category, category) if language == 'en'
+        else category_translations.get(category, category)) %} {% set cat_slug =
+        category|lower|replace(' ', '_')|replace('/', '_')|replace('&','and') %}
+        <a
+          class="chip"
+          href="#cat_{{ cat_slug }}"
+          data-cat="#cat_{{ cat_slug }}"
+          >{{ cat_label }}</a
+        >
+        {% endfor %}
+      </div>
+
+      <!-- Search + Cart -->
+      <div class="topbar">
+        <input
+          type="text"
+          id="menu-search"
+          class="search"
+          placeholder="{{ 'Search menu items...' if language == 'en' else 'Cari menu...' }}"
+        />
+        <button
+          onclick="window.location.href='/cart?table={{ table }}&session={{ session }}&lang={{ language }}'"
+          id="cart-floating-btn"
+        >
+          🛒 {{ 'Cart' if language=='en' else 'Keranjang' }} (<span
+            id="cart-count"
+            >0</span
+          >)
+        </button>
+      </div>
+
+      <!-- Sections -->
+      {% for category, items in menu.items() %} {% set cat_label =
+      (category_translations_rev.get(category, category) if language == 'en'
+      else category_translations.get(category, category)) %} {% set cat_slug =
+      category|lower|replace(' ', '_')|replace('/', '_')|replace('&','and') %}
+      {# detect if any item has dishes — Jinja-safe #} {% set ns =
+      namespace(has_dish_items=false) %} {% for _n, _m in items.items() %} {% if
+      _m.dishes and (_m.dishes|length > 0) %}{% set ns.has_dish_items = true
+      %}{% endif %} {% endfor %} {% set has_dish_items = ns.has_dish_items %}
+
+      <section
+        class="menu-section"
+        id="cat_{{ cat_slug }}"
+        data-category="{{ category|e }}"
+      >
+        <h2>{{ cat_label }}</h2>
+
+        {% if has_dish_items %} {# ---- A) Subcategory blocks: render ALL dishes
+        as cards ---- #} {% for sub_name, sub_meta in items.items() %} {% if
+        sub_meta.dishes and sub_meta.dishes|length>0 %} {% set sub_slug =
+        sub_name|lower|replace(' ', '_')|replace('/', '_')|replace('&','and')
+        %} {% set sub_label = (language != 'en') and sub_name or
+        (item_translations.get(sub_name) or
+        item_translations_lower.get(sub_name|lower) or sub_name) %}
+        <h3
+          id="cat_{{ cat_slug }}--sub--{{ sub_slug }}"
+          class="subcat-title"
+          style="margin: 8px 0 6px"
+        >
+          {{ sub_label }}
+        </h3>
+        <div class="grid">
+          {% for dish in sub_meta.dishes %}
+            {% set dish_name = (dish.name if dish is mapping else dish) %}
+            {% set dish_label = (language != 'en') and dish_name
+                                or (item_translations.get(dish_name)
+                                    or item_translations_lower.get(dish_name|lower)
+                                    or dish_name) %}
+            {% set item_available = sub_meta.get('available', True) %}
+            {% set dish_available = (dish.get('available', True) if dish is mapping else True) %}
+            {% set is_unavailable = not (item_available and dish_available) %}
+            {% set unit_l = (sub_meta.unit|default('')|lower) %}
+            {% set is_ons = (unit_l == 'ons') %}
+            {# per_ons here is actually per 100 g (1 ons = 100 g). Keep name for JS compatibility #}
+            {% set base_per_ons = (is_ons and (sub_meta.price_per_kg or sub_meta.price_per_ons or 0)) or 0 %}
+            {% set per_ons = (dish.price_override if (dish is mapping and dish.price_override) else base_per_ons) %}
+            {% set dish_price = (dish.price_override if (dish is mapping and dish.price_override) else sub_meta.price_per_kg) %}
+            {% set mn = sub_meta.portion_ons_min or 3 %}
+            {% set mx = sub_meta.portion_ons_max or (mn if mn>0 else 5) %}
+            {% set pcs = sub_meta.portion_choices or [] %}
+            {% set grams_line = (pcs|length and (pcs|join(' / ')).replace(' ons','00 g')) or '' %}
+            {% set dish_img_src = (dish.get('image_url') if dish is mapping else sub_meta.image_url) or url_for('static', filename='placeholder.jpg') %}
+
+          <article
+            class="card item-card{% if is_unavailable %} unavailable{% endif %}"
+            role="listitem"
+            data-name="{{ (dish_name ~ ' ' ~ dish_label)|lower }}"
+          >
+            <img
+              class="pic menu-img"
+              src="{{ dish_img_src }}"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='{{ url_for('static', filename='placeholder.jpg') }}';"
+              alt="{{ dish_label }}"
+            />
+            <div class="info item-info">
+              <div class="name">{{ dish_label }}</div>
+
+              {% if is_ons and per_ons %} {% if grams_line %}
+              <div class="muted">
+                {{ 'Per portion:' if language=='en' else 'Per porsi:' }} {{
+                grams_line }}
+              </div>
+              {% endif %}
+              <div class="price">Rp {{ '{:,}'.format(per_ons) }} / 100g</div>
+              {% else %} {% if dish_price %}
+              <div class="price">
+                Rp {{ '{:,}'.format(dish_price) }}
+              </div>
+              {% endif %} {% endif %}
+
+              <button
+                type="button"
+                class="btn-add add-to-cart-btn"
+                data-item="{{ sub_name }} - {{ dish_name }}"
+                data-display-name="{{ dish_label }}"
+                data-category="{{ category }}"
+                data-sauces="[]"
+                data-unit="{{ sub_meta.unit or '' }}"
+                data-portion-info="{{ sub_meta.portion_info or '' }}"
+                data-portion-choices="{{ (sub_meta.portion_choices or [])|tojson|safe }}"
+                data-portion-min-ons="{{ mn }}"
+                data-portion-max-ons="{{ mx }}"
+                data-price-per-ons="{{ (is_ons and per_ons) or 0 }}"
+                data-unit-price="{{ (not is_ons and dish_price) or 0 }}"
+                data-pic="{{ dish_img_src }}"
+                onclick="handleAddToCart(this)"
+                {%
+                if
+                is_unavailable
+                %}disabled
+                aria-disabled="true"
+                {%
+                endif
+                %}
+              >
+                {{ 'Add to Cart' if language == 'en' else 'Tambah ke Keranjang'
+                }}
+              </button>
+            </div>
+            {% if is_unavailable %}
+            <div class="sold-out-overlay">
+              <span class="sold-out-text">HABIS</span>
+              {% if language == 'en' %}<span class="sold-out-sub">Sold Out</span
+              >{% endif %}
+            </div>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+        {% endif %} {% endfor %} {# ---- B) Standalone items (no dishes) under
+        “Lainnya” ---- #} {% set ns2 = namespace(opened=false) %} {% for
+        sub_name, sub_meta in items.items() %} {% if not (sub_meta.dishes and
+        sub_meta.dishes|length>0) %} {% if not ns2.opened %}
+        <h3
+          id="cat_{{ cat_slug }}--sub--lainnya"
+          class="subcat-title"
+          style="margin: 12px 0 6px"
+        >
+          {{ 'Others' if language=='en' else 'Lainnya' }}
+        </h3>
+        <div class="grid">
+          {% set ns2.opened = true %} {% endif %} {% set unit_l =
+          (sub_meta.unit|default('')|lower) %} {% set is_ons = (unit_l == 'ons')
+          %} {% set per_ons = (is_ons and (sub_meta.price_per_kg or
+          sub_meta.price_per_ons or 0)) or 0 %} {% set mn =
+        sub_meta.portion_ons_min or 3 %} {% set mx = sub_meta.portion_ons_max
+          or (mn if mn>0 else 5) %} {% set pcs = sub_meta.portion_choices or []
+          %} {% set grams_line = (pcs|length and (pcs|join(' / ')).replace('
+          ons','00 g')) or '' %} {% set item_available =
+          sub_meta.get('available', True) %} {% set is_unavailable = not
+          item_available %} {% set item_label = (language != 'en') and sub_name
+          or (item_translations.get(sub_name) or
+          item_translations_lower.get(sub_name|lower) or sub_name) %} {% set
+          item_price = sub_meta.price_per_kg or 0 %} {% set item_img_src =
+          (sub_meta.image_url or url_for('static', filename='placeholder.jpg')) %}
+
+          <article
+            class="card item-card{% if is_unavailable %} unavailable{% endif %}"
+            role="listitem"
+            data-name="{{ (sub_name ~ ' ' ~ item_label)|lower }}"
+          >
+            <img
+              class="pic menu-img"
+              loading="lazy"
+              src="{{ item_img_src }}"
+              onerror="this.onerror=null;this.src='{{ url_for('static', filename='placeholder.jpg') }}';"
+              alt="{{ item_label }}"
+            />
+            <div class="info item-info">
+              <div class="name">{{ item_label }}</div>
+
+              {% if is_ons and per_ons %} {% if grams_line %}
+              <div class="muted">
+                {{ 'Per portion:' if language=='en' else 'Per porsi:' }} {{
+                grams_line }}
+              </div>
+              {% endif %}
+              <div class="price">Rp {{ '{:,}'.format(per_ons) }} / 100g</div>
+              {% else %} {% if item_price %}
+              <div class="price">
+                Rp {{ '{:,}'.format(item_price) }}
+              </div>
+              {% endif %} {% endif %}
+
+              <button
+                type="button"
+                class="btn-add add-to-cart-btn"
+                data-item="{{ sub_name }}"
+                data-display-name="{{ item_label }}"
+                data-category="{{ category }}"
+                data-sauces="[]"
+                data-unit="{{ sub_meta.unit or '' }}"
+                data-portion-info="{{ sub_meta.portion_info or '' }}"
+                data-portion-choices="{{ (sub_meta.portion_choices or [])|tojson|safe }}"
+                data-portion-min-ons="{{ mn }}"
+                data-portion-max-ons="{{ mx }}"
+                data-price-per-ons="{{ (is_ons and per_ons) or 0 }}"
+                data-unit-price="{{ (not is_ons and item_price) or 0 }}"
+                data-pic="{{ item_img_src }}"
+                onclick="handleAddToCart(this)"
+                {%
+                if
+                is_unavailable
+                %}disabled
+                aria-disabled="true"
+                {%
+                endif
+                %}
+              >
+                {{ 'Add to Cart' if language == 'en' else 'Tambah ke Keranjang'
+                }}
+              </button>
+            </div>
+            {% if is_unavailable %}
+            <div class="sold-out-overlay">
+              <span class="sold-out-text">HABIS</span>
+              {% if language == 'en' %}<span class="sold-out-sub">Sold Out</span
+              >{% endif %}
+            </div>
+            {% endif %}
+          </article>
+          {% endif %} {% endfor %} {% if ns2.opened %}
+        </div>
+        {% endif %} {% else %} {# ---- C) Regular category (no dish lists) ->
+        simple cards ---- #}
+        <div class="grid" role="list">
+          {% for item_name, item_data in items.items() %} {% set unit_l =
+          (item_data.unit|default('')|lower) %} {% set is_ons = (unit_l ==
+          'ons') %} {% set per_ons = (is_ons and (item_data.price_per_kg or
+          item_data.price_per_ons or 0)) or 0 %} {% set mn =
+          item_data.portion_ons_min or 3 %} {% set mx =
+          item_data.portion_ons_max or (mn if mn>0 else 5) %} {% set pcs =
+          item_data.portion_choices or [] %} {% set grams_line = (pcs|length and
+          (pcs|join(' / ')).replace(' ons','00 g')) or '' %} {% set
+          item_available = item_data.get('available', True) %} {% set
+          is_unavailable = not item_available %} {% set img_src =
+          (item_data.image_url or url_for('static', filename='placeholder.jpg')) %}
+
+          <article
+            class="card item-card{% if is_unavailable %} unavailable{% endif %}"
+            role="listitem"
+            data-name="{{ item_name|lower }}"
+          >
+            <img
+              class="pic menu-img"
+              loading="lazy"
+              src="{{ img_src }}"
+              onerror="this.onerror=null;this.src='{{ url_for('static', filename='placeholder.jpg') }}';"
+              alt="{{ item_name }}"
+            />
+            <div class="info item-info">
+              <div class="name">{{ item_name }}</div>
+
+              {% if is_ons and per_ons %} {% if grams_line %}
+              <div class="muted">
+                {{ 'Per portion:' if language=='en' else 'Per porsi:' }} {{
+                grams_line }}
+              </div>
+              {% endif %}
+              <div class="price">Rp {{ '{:,}'.format(per_ons) }} / 100g</div>
+              {% else %} {% if item_data.price_per_kg %}
+              <div class="price">
+                Rp {{ '{:,}'.format(item_data.price_per_kg) }}
+              </div>
+              {% endif %} {% endif %}
+
+              <button
+                type="button"
+                class="btn-add add-to-cart-btn"
+                data-item="{{ item_name }}"
+                data-category="{{ category }}"
+                data-sauces="{{ (item_data.dishes or [])|tojson|safe }}"
+                data-unit="{{ item_data.unit or '' }}"
+                data-portion-info="{{ item_data.portion_info or '' }}"
+                data-portion-choices="{{ (item_data.portion_choices or [])|tojson|safe }}"
+                data-portion-min-ons="{{ mn }}"
+                data-portion-max-ons="{{ mx }}"
+                data-price-per-ons="{{ (is_ons and per_ons) or 0 }}"
+                data-pic="{{ img_src }}"
+                onclick="handleAddToCart(this)"
+                {%
+                if
+                is_unavailable
+                %}disabled
+                aria-disabled="true"
+                {%
+                endif
+                %}
+              >
+                {{ 'Add to Cart' if language == 'en' else 'Tambah ke Keranjang'
+                }}
+              </button>
+            </div>
+            {% if is_unavailable %}
+            <div class="sold-out-overlay">
+              <span class="sold-out-text">HABIS</span>
+              {% if language == 'en' %}<span class="sold-out-sub">Sold Out</span
+              >{% endif %}
+            </div>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </section>
+      {% endfor %}
+    </div>
+
+    <!-- Popup -->
+    <div id="popup" class="popup" role="dialog" aria-modal="true">
+      <div class="popup-content">
+        <h3 id="popup-item-name" class="pop-title"></h3>
+        <img id="popup-pic" class="pop-pic" alt="" />
+        <div class="row">
+          <div class="qty-row">
+            <button type="button" class="stepper" id="qty-minus">−</button>
+            <span id="qty-display">1</span>
+            <button type="button" class="stepper" id="qty-plus">+</button>
+          </div>
+          <input type="number" id="qty-input" value="1" min="1" hidden />
+        </div>
+
+        <div id="sauce-options"></div>
+
+        <label
+          >{{ 'Note:' if language == 'en' else 'Catatan:' }}
+          <input
+            type="text"
+            id="note-input"
+            placeholder="{{ 'Make it spicy...' if language=='en' else 'Bikin pedes...' }}"
+          />
+        </label>
+
+        <div class="actions">
+          <button type="button" class="btn-ghost" onclick="closePopup()">
+            {{ 'Cancel' if language == 'en' else 'Batal' }}
+          </button>
+          <button type="button" class="btn-primary" onclick="addPopupToCart()">
+            {{ 'Add' if language == 'en' else 'Tambahkan' }}
+          </button>
+        </div>
+
+        <label
+          id="est-label"
+          class="muted"
+          style="display: block; margin-top: 6px"
+        ></label>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">
+      {{ 'Order submitted' if language == 'en' else 'Pesanan terkirim' }}
+    </div>
+
+    <!-- Data for JS -->
+    <script>
+      const lang = "{{ language|default('id') }}";
+      const sessionId = "{{ session }}";
+      const tableNo = "{{ table }}";
+      window.__cartPollMs = {{ cart_poll_ms|tojson }};
+    </script>
+
+    <!-- Minimal behavior (search, chips, toast) -->
+    <script>
+      const hdr = document.getElementById("hdr");
+      window.addEventListener("scroll", () => {
+        const y = window.scrollY || document.documentElement.scrollTop;
+        hdr.classList.toggle("compact", y > 24);
+      });
+
+      const chips = document.querySelectorAll("#catChips a.chip");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              chips.forEach((c) =>
+                c.classList.toggle(
+                  "active",
+                  c.dataset.cat === "#" + e.target.id
+                )
+              );
+            }
+          });
+        },
+        { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+      );
+      document
+        .querySelectorAll(".menu-section")
+        .forEach((sec) => observer.observe(sec));
+
+      const search = document.getElementById("menu-search");
+      function applySearchFilter(q) {
+        const query = (q || "").trim().toLowerCase();
+        const inSearch = query.length > 0;
+
+        // 1) Hide/show individual cards
+        document.querySelectorAll(".item-card").forEach((card) => {
+          const name = (card.dataset.name || "").toLowerCase();
+          const match = !inSearch || name.includes(query);
+          card.style.display = match ? "" : "none";
+        });
+
+        // 2) Collapse subcategories and grids, then sections
+        document.querySelectorAll("section.menu-section").forEach((sec) => {
+          let sectionHas = false;
+
+          // Any "h3.subcat-title" with its following .grid
+          sec.querySelectorAll("h3.subcat-title").forEach((h3) => {
+            const grid = h3.nextElementSibling;
+            if (!grid || !grid.classList || !grid.classList.contains("grid"))
+              return;
+            const has = Array.from(grid.querySelectorAll(".item-card")).some(
+              (c) => c.style.display !== "none"
+            );
+            h3.style.display = has ? "" : "none";
+            grid.style.display = has ? "" : "none";
+            if (has) sectionHas = true;
+          });
+
+          // Grids directly under the section (regular categories, no subcats)
+          sec
+            .querySelectorAll(':scope > .grid, :scope > div.grid[role="list"]')
+            .forEach((grid) => {
+              // Skip grids that already have an h3 immediately before them (handled above)
+              const prev = grid.previousElementSibling;
+              if (
+                prev &&
+                prev.classList &&
+                prev.classList.contains("subcat-title")
+              )
+                return;
+
+              const has = Array.from(grid.querySelectorAll(".item-card")).some(
+                (c) => c.style.display !== "none"
+              );
+              grid.style.display = has ? "" : "none";
+              if (has) sectionHas = true;
+            });
+
+          // Hide the entire category section if nothing remains
+          sec.style.display = sectionHas ? "" : "none";
+        });
+      }
+
+      search?.addEventListener("input", () => applySearchFilter(search.value));
+      // Optional: run once on load to normalize
+      document.addEventListener("DOMContentLoaded", () =>
+        applySearchFilter("")
+      );
+    </script>
+
+    <script src="{{ url_for('static', filename='js/order.js')}}"></script>
+    <div id="catSheet" aria-hidden="true">
+      <div class="panel">
+        <div
+          style="
+            height: 4px;
+            width: 42px;
+            background: #e5e7eb;
+            border-radius: 99px;
+            margin: 6px auto 12px;
+          "
+        ></div>
+        <h3 style="margin: 0 0 10px">
+          {{ 'Categories' if language=='en' else 'Kategori' }}
+        </h3>
+        <div id="catSheetList" class="grid"></div>
+      </div>
+    </div>
+  </body>
+</html>

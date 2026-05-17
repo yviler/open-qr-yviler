@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Submitting…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="1;url={{ redirect_url }}">
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; padding: 24px; text-align:center; }
+  </style>
+</head>
+<body>
+  <p>Order submitted. Redirecting…</p>
+  <script>
+    try { sessionStorage.removeItem("cart"); } catch (e) {}
+    location.replace("{{ redirect_url }}");
+  </script>
+  <noscript>
+    <p>JavaScript is disabled. Click <a href="{{ redirect_url }}">here</a> to go back.</p>
+  </noscript>
+</body>
+</html>
